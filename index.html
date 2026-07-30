@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="时间管理">
+<meta name="theme-color" content="#6366f1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<title>时间管理 · 需求供给视角</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --card-hover: #334155;
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #334155;
+  --radius: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { padding-top: var(--safe-top); padding-bottom: calc(var(--safe-bottom) + 80px); }
+
+/* ===== 顶部导航 ===== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px 12px;
+}
+.header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.header .subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== Tab 导航 ===== */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--card);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ===== 主内容区 ===== */
+.main { padding: 16px; max-width: 600px; margin: 0 auto; }
+.page { display: none; animation: fadeIn 0.3s; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== 卡片 ===== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+.card:active { background: var(--card-hover); }
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.card-meta { font-size: 12px; color: var(--text-muted); }
+
+/* ===== 时段卡片 ===== */
+.slot-card { cursor: pointer; position: relative; overflow: hidden; }
+.slot-card .quality-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.quality-high { background: rgba(16,185,129,0.2); color: var(--success); }
+.quality-mid { background: rgba(245,158,11,0.2); color: var(--warning); }
+.quality-low { background: rgba(239,68,68,0.2); color: var(--danger); }
+.quality-none { background: rgba(100,116,139,0.2); color: var(--text-dim); }
+
+.slot-time { font-size: 13px; color: var(--text-muted); margin: 6px 0; }
+.slot-dims { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.dim-tag {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--card-hover);
+}
+.dim-tag.high { background: rgba(16,185,129,0.15); color: var(--success); }
+.dim-tag.mid { background: rgba(245,158,11,0.15); color: var(--warning); }
+.dim-tag.low { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:active { background: var(--primary-dark); }
+.btn-secondary { background: var(--card-hover); color: var(--text); }
+.btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+.btn-sm { padding: 8px 14px; font-size: 13px; width: auto; }
+
+/* ===== 表单 ===== */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+
+/* ===== 维度选择器 ===== */
+.dim-selector { display: flex; gap: 8px; }
+.dim-option {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dim-option.selected.high { border-color: var(--success); background: rgba(16,185,129,0.15); color: var(--success); }
+.dim-option.selected.mid { border-color: var(--warning); background: rgba(245,158,11,0.15); color: var(--warning); }
+.dim-option.selected.low { border-color: var(--danger); background: rgba(239,68,68,0.15); color: var(--danger); }
+
+/* ===== 事件类型标签 ===== */
+.event-types { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.event-type-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.event-type-card.selected { border-color: var(--primary); background: rgba(99,102,241,0.1); }
+.event-type-card .icon { font-size: 28px; margin-bottom: 6px; }
+.event-type-card .name { font-size: 14px; font-weight: 700; }
+.event-type-card .desc { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ===== 模态框 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  animation: slideUp 0.3s;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 18px; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--card-hover);
+  border: none;
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 推荐匹配 ===== */
+.recommend-box {
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(6,182,212,0.1));
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.recommend-title { font-size: 12px; color: var(--primary-light); font-weight: 700; margin-bottom: 8px; }
+.recommend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.recommend-item:last-child { margin-bottom: 0; }
+
+/* ===== 复盘记录 ===== */
+.log-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--card);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--primary);
+}
+.log-time { font-size: 12px; color: var(--text-muted); flex-shrink: 0; width: 80px; }
+.log-content { flex: 1; }
+.log-slot { font-size: 13px; font-weight: 600; }
+.log-event { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.log-note { font-size: 12px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+
+/* ===== 空状态 ===== */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+}
+.empty .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty .text { font-size: 14px; }
+
+/* ===== 底部浮动按钮 ===== */
+.fab {
+  position: fixed;
+  bottom: calc(20px + var(--safe-bottom));
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.fab:active { transform: scale(0.9); }
+
+/* ===== 通知权限提示 ===== */
+.notify-banner {
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.notify-banner button { flex-shrink: 0; width: auto; padding: 6px 12px; font-size: 12px; }
+
+/* ===== 当前时段高亮 ===== */
+.current-slot { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+.current-slot::before {
+  content: '当前';
+  position: absolute;
+  top: 0; left: 0;
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 0 0 8px 0;
+}
+
+/* ===== 统计 ===== */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.stat-num { font-size: 28px; font-weight: 800; color: var(--primary-light); }
+.stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+.section-title { font-size: 15px; font-weight: 700; margin: 16px 0 10px; color: var(--text); }
+
+/* ===== 滑动开关 ===== */
+.switch { position: relative; display: inline-block; width: 48px; height: 28px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--border); border-radius: 28px; transition: 0.3s;
+}
+.slider:before {
+  content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px;
+  background: white; border-radius: 50%; transition: 0.3s;
+}
+input:checked + .slider { background: var(--primary); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+.remind-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.remind-row .info { flex: 1; }
+.remind-row .info .name { font-size: 14px; font-weight: 600; }
+.remind-row .info .time { font-size: 12px; color: var(--text-muted); }
+
+/* 时段预设图标颜色 */
+.slot-icon { font-size: 20px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⏳ 时间管理</h1>
+  <div class="subtitle">从需求与供给的角度管理时间</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-page="slots">📋 时段盘点</div>
+  <div class="tab" data-page="events">🎯 事件规划</div>
+  <div class="tab" data-page="today">📅 今日复盘</div>
+  <div class="tab" data-page="stats">📊 统计</div>
+  <div class="tab" data-page="settings">⚙️ 设置</div>
+</div>
+
+<div class="main">
+
+<!-- ===== 时段盘点页 ===== -->
+<div class="page active" id="page-slots">
+  <div id="notify-banner-container"></div>
+  <div class="section-title">空闲时段（供给侧）</div>
+  <div class="card" style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+    💡 盘点你常见的空闲时间段，从<b>时间完整度</b>、<b>能量水平</b>、<b>环境可控度</b>三个维度评估每段时间的质量，系统会据此推荐适合做的事。
+  </div>
+  <div id="slots-list"></div>
+</div>
+
+<!-- ===== 事件规划页 ===== -->
+<div class="page" id="page-events">
+  <div class="section-title">事件分类（需求侧）</div>
+  <div class="card" style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+    💡 将你想做的事分为四类，系统会根据时段质量自动推荐匹配的事件类型。
+  </div>
+  <div class="event-types" style="margin-bottom:16px;">
+    <div class="event-type-card" style="cursor:default;">
+      <div class="icon">🔋</div>
+      <div class="name">恢复性</div>
+      <div class="desc">身体精力恢复<br>心理心力恢复</div>
+    </div>
+    <div class="event-type-card" style="cursor:default;">
+      <div class="icon">🧹</div>
+      <div class="name">维护性</div>
+      <div class="desc">吃饭、洗衣<br>家务、赶路</div>
+    </div>
+    <div class="event-type-card" style="cursor:default;">
+      <div class="icon">👥</div>
+      <div class="name">关系性</div>
+      <div class="desc">陪家人、约朋友<br>见客户</div>
+    </div>
+    <div class="event-type-card" style="cursor:default;">
+      <div class="icon">🌱</div>
+      <div class="name">成长性</div>
+      <div class="desc">实现个人目标<br>学习、创造</div>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="openEventModal()">+ 添加事件</button>
+  <div id="events-list" style="margin-top:16px;"></div>
+</div>
+
+<!-- ===== 今日复盘页 ===== -->
+<div class="page" id="page-today">
+  <div class="section-title">今日时间使用</div>
+  <div class="card" style="font-size:13px;color:var(--text-muted);">
+    💡 记录今天在每个时段实际做了什么，看看需求和供给是否匹配。
+  </div>
+  <button class="btn btn-primary" onclick="openLogModal()">+ 记录时间使用</button>
+  <div id="today-logs" style="margin-top:16px;"></div>
+</div>
+
+<!-- ===== 统计页 ===== -->
+<div class="page" id="page-stats">
+  <div class="section-title">数据统计</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="stat-slots">0</div><div class="stat-label">已盘时段</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-events">0</div><div class="stat-label">事件总数</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-logs">0</div><div class="stat-label">今日记录</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-match">0%</div><div class="stat-label">匹配率</div></div>
+  </div>
+  <div class="section-title">时段质量分布</div>
+  <div id="quality-chart"></div>
+  <div class="section-title">事件类型分布</div>
+  <div id="event-chart"></div>
+</div>
+
+<!-- ===== 设置页 ===== -->
+<div class="page" id="page-settings">
+  <div class="section-title">提醒设置</div>
+  <div class="card" style="font-size:13px;color:var(--text-muted);">
+    💡 开启后，在每个时段开始时会推送通知，告诉你当前时段质量和推荐做的事。
+  </div>
+  <div id="remind-settings"></div>
+
+  <div class="section-title">数据管理</div>
+  <button class="btn btn-secondary" onclick="exportData()" style="margin-bottom:8px;">📤 导出数据</button>
+  <button class="btn btn-secondary" onclick="importData()" style="margin-bottom:8px;">📥 导入数据</button>
+  <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清空所有数据</button>
+
+  <div class="section-title">关于</div>
+  <div class="card" style="font-size:13px;color:var(--text-muted);line-height:1.8;">
+    <b>时间管理 · 需求供给视角</b><br>
+    版本 1.0<br><br>
+    <b>核心逻辑：</b><br>
+    • <b>供给侧</b>：盘点空闲时间段，评估时间完整度、能量水平、环境可控度<br>
+    • <b>需求侧</b>：将想做的事分为恢复性、维护性、关系性、成长性<br>
+    • <b>匹配</b>：高质量时段做成长性/关系性，低质量时段做恢复性/维护性<br><br>
+    数据全部存储在本地，不会上传服务器。<br>
+    可通过浏览器"添加到主屏幕"作为桌面应用使用。
+  </div>
+</div>
+
+</div>
+
+<button class="fab" onclick="quickAdd()">+</button>
+
+<!-- ===== 模态框 ===== -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+// ========== 数据模型 ==========
+const STORAGE_KEY = 'time_manager_data';
+
+const SLOT_PRESETS = [
+  { id: 'weekday_morning', name: '工作日·早起出门', icon: '🌅', desc: '起床到出门上班', defaultStart: '06:30', defaultEnd: '08:00' },
+  { id: 'weekday_commute_am', name: '工作日·早通勤', icon: '🚇', desc: '上班路上', defaultStart: '08:00', defaultEnd: '09:00' },
+  { id: 'weekday_lunch', name: '工作日·午休', icon: '🍱', desc: '中午休息时间', defaultStart: '12:00', defaultEnd: '13:30' },
+  { id: 'weekday_commute_pm', name: '工作日·晚通勤', icon: '🚶', desc: '下班回家路上', defaultStart: '18:00', defaultEnd: '19:00' },
+  { id: 'weekday_evening', name: '工作日·晚上', icon: '🌙', desc: '下班后到睡觉前', defaultStart: '19:30', defaultEnd: '23:00' },
+  { id: 'weekend', name: '休息日及假期', icon: '🏖️', desc: '周末和节假日白天', defaultStart: '09:00', defaultEnd: '21:00' },
+];
+
+const EVENT_TYPES = {
+  restorative: { name: '恢复性', icon: '🔋', color: '#10b981', desc: '身体精力恢复、心理心力恢复' },
+  maintenance: { name: '维护性', icon: '🧹', color: '#f59e0b', desc: '吃饭、洗衣、收拾家务、赶路' },
+  relational: { name: '关系性', icon: '👥', color: '#06b6d4', desc: '陪家人、约朋友、见客户' },
+  growth: { name: '成长性', icon: '🌱', color: '#6366f1', desc: '实现个人目标、学习、创造' },
+};
+
+let data = {
+  slots: [],      // {id, presetId, name, icon, startTime, endTime, dims:{completeness, energy, control}, notes}
+  events: [],     // {id, type, name, desc, minQuality}
+  logs: [],       // {id, date, slotId, eventType, content, note}
+  reminders: {},  // {slotId: {enabled, advanceMin}}
+};
+
+// ========== 存储 ==========
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) data = { ...data, ...JSON.parse(raw) };
+  } catch(e) { console.error('加载数据失败', e); }
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ========== 工具函数 ==========
+function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+function dimLabel(v) { return v === 'high' ? '高' : v === 'mid' ? '中' : v === 'low' ? '低' : '未评'; }
+function dimClass(v) { return v || 'none'; }
+
+function calcQuality(dims) {
+  if (!dims.completeness || !dims.energy || !dims.control) return 'none';
+  const score = (dims.completeness === 'high' ? 3 : dims.completeness === 'mid' ? 2 : 1) +
+                (dims.energy === 'high' ? 3 : dims.energy === 'mid' ? 2 : 1) +
+                (dims.control === 'high' ? 3 : dims.control === 'mid' ? 2 : 1);
+  if (score >= 7) return 'high';
+  if (score >= 4) return 'mid';
+  return 'low';
+}
+
+function qualityLabel(q) { return q === 'high' ? '高质量' : q === 'mid' ? '中质量' : q === 'low' ? '低质量' : '未评估'; }
+
+function timeToMinutes(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+
+function isWeekend() { const d = new Date().getDay(); return d === 0 || d === 6; }
+
+function getCurrentSlot() {
+  const now = new Date();
+  const minutes = now.getHours()*60 + now.getMinutes();
+  const weekend = isWeekend();
+  for (const slot of data.slots) {
+    if (weekend && slot.presetId !== 'weekend') continue;
+    if (!weekend && slot.presetId === 'weekend') continue;
+    const s = timeToMinutes(slot.startTime);
+    const e = timeToMinutes(slot.endTime);
+    if (e < s) { // 跨天
+      if (minutes >= s || minutes < e) return slot;
+    } else {
+      if (minutes >= s && minutes < e) return slot;
+    }
+  }
+  return null;
+}
+
+// ========== 匹配推荐 ==========
+function getRecommendations(dims) {
+  const q = calcQuality(dims);
+  const recs = [];
+  if (q === 'high') {
+    recs.push({ type: 'growth', reason: '高质量时段，适合专注投入成长性事件' });
+    recs.push({ type: 'relational', reason: '能量充足，适合深度社交互动' });
+  } else if (q === 'mid') {
+    recs.push({ type: 'maintenance', reason: '中等时段，适合处理维护性事务' });
+    recs.push({ type: 'relational', reason: '也可用于轻松的关系维护' });
+  } else if (q === 'low') {
+    recs.push({ type: 'restorative', reason: '低质量时段，优先恢复精力' });
+    recs.push({ type: 'maintenance', reason: '或处理简单维护性事务' });
+  }
+  // 具体事件
+  const matchedEvents = data.events.filter(e => {
+    if (q === 'high') return e.type === 'growth' || e.type === 'relational';
+    if (q === 'mid') return e.type === 'maintenance' || e.type === 'relational';
+    if (q === 'low') return e.type === 'restorative' || e.type === 'maintenance';
+    return false;
+  });
+  return { recs, matchedEvents, quality: q };
+}
+
+// ========== 页面切换 ==========
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
+    if (tab.dataset.page === 'stats') renderStats();
+    if (tab.dataset.page === 'settings') renderSettings();
+  });
+});
+
+// ========== 渲染：时段列表 ==========
+function renderSlots() {
+  const container = document.getElementById('slots-list');
+  const currentSlot = getCurrentSlot();
+
+  if (data.slots.length === 0) {
+    // 首次使用，自动创建预设
+    container.innerHTML = `
+      <div class="empty">
+        <div class="icon">📋</div>
+        <div class="text">还没有盘点时段<br>点击下方按钮快速创建常见时段</div>
+      </div>
+      <button class="btn btn-primary" onclick="initPresetSlots()" style="margin-top:16px;">一键创建常见时段</button>
+    `;
+    return;
+  }
+
+  container.innerHTML = data.slots.map(slot => {
+    const q = calcQuality(slot.dims);
+    const isCurrent = currentSlot && currentSlot.id === slot.id;
+    return `
+      <div class="card slot-card ${isCurrent ? 'current-slot' : ''}" onclick="openSlotModal('${slot.id}')">
+        <div class="card-title">
+          <span class="slot-icon">${slot.icon}</span>
+          ${slot.name}
+        </div>
+        <div class="slot-time">⏰ ${slot.startTime} - ${slot.endTime} ${slot.desc ? '· ' + slot.desc : ''}</div>
+        <div class="quality-badge quality-${q}">${qualityLabel(q)}</div>
+        ${slot.dims.completeness ? `
+        <div class="slot-dims">
+          <span class="dim-tag ${dimClass(slot.dims.completeness)}">完整度 ${dimLabel(slot.dims.completeness)}</span>
+          <span class="dim-tag ${dimClass(slot.dims.energy)}">能量 ${dimLabel(slot.dims.energy)}</span>
+          <span class="dim-tag ${dimClass(slot.dims.control)}">环境 ${dimLabel(slot.dims.control)}</span>
+        </div>` : '<div class="slot-dims"><span class="dim-tag none">点击评估三维度</span></div>'}
+        ${q !== 'none' ? `
+        <div class="recommend-box">
+          <div class="recommend-title">💡 推荐做的事</div>
+          ${getRecommendations(slot.dims).recs.map(r => `
+            <div class="recommend-item">${EVENT_TYPES[r.type].icon} ${r.reason}</div>
+          `).join('')}
+          ${getRecommendations(slot.dims).matchedEvents.length > 0 ? `
+            <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">你的事件：</div>
+            ${getRecommendations(slot.dims).matchedEvents.map(e => `
+              <div class="recommend-item">${EVENT_TYPES[e.type].icon} ${e.name}</div>
+            `).join('')}
+          ` : ''}
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ========== 初始化预设时段 ==========
+function initPresetSlots() {
+  data.slots = SLOT_PRESETS.map(p => ({
+    id: genId(),
+    presetId: p.id,
+    name: p.name,
+    icon: p.icon,
+    desc: p.desc,
+    startTime: p.defaultStart,
+    endTime: p.defaultEnd,
+    dims: {},
+    notes: '',
+  }));
+  saveData();
+  renderSlots();
+}
+
+// ========== 时段编辑模态框 ==========
+function openSlotModal(slotId) {
+  const slot = data.slots.find(s => s.id === slotId);
+  if (!slot) return;
+  const q = calcQuality(slot.dims);
+
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">${slot.icon} ${slot.name}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">时段名称</label>
+      <input type="text" class="form-input" id="slot-name" value="${slot.name}">
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">开始时间</label>
+        <input type="time" class="form-input" id="slot-start" value="${slot.startTime}">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">结束时间</label>
+        <input type="time" class="form-input" id="slot-end" value="${slot.endTime}">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">说明（可选）</label>
+      <input type="text" class="form-input" id="slot-desc" value="${slot.desc || ''}" placeholder="如：起床到出门">
+    </div>
+
+    <div class="section-title">三维度评估</div>
+
+    <div class="form-group">
+      <label class="form-label">⏱️ 时间完整度（这段时长是否足够完整做一件事）</label>
+      <div class="dim-selector" data-dim="completeness">
+        ${['high','mid','low'].map(v => `
+          <div class="dim-option ${slot.dims.completeness === v ? 'selected ' + v : ''}" data-val="${v}" onclick="selectDim(this)">
+            ${v === 'high' ? '高<br><small>≥90分钟</small>' : v === 'mid' ? '中<br><small>30-90分钟</small>' : '低<br><small>&lt;30分钟</small>'}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">⚡ 能量水平（这段时间你的精力如何）</label>
+      <div class="dim-selector" data-dim="energy">
+        ${['high','mid','low'].map(v => `
+          <div class="dim-option ${slot.dims.energy === v ? 'selected ' + v : ''}" data-val="${v}" onclick="selectDim(this)">
+            ${v === 'high' ? '高<br><small>精力充沛</small>' : v === 'mid' ? '中<br><small>尚可</small>' : '低<br><small>疲惫</small>'}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🏠 环境可控度（是否安静、不受打扰）</label>
+      <div class="dim-selector" data-dim="control">
+        ${['high','mid','low'].map(v => `
+          <div class="dim-option ${slot.dims.control === v ? 'selected ' + v : ''}" data-val="${v}" onclick="selectDim(this)">
+            ${v === 'high' ? '高<br><small>安静独处</small>' : v === 'mid' ? '中<br><small>偶有打扰</small>' : '低<br><small>嘈杂人多</small>'}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${q !== 'none' ? `
+    <div class="recommend-box">
+      <div class="recommend-title">💡 匹配推荐 · ${qualityLabel(q)}</div>
+      ${getRecommendations(slot.dims).recs.map(r => `
+        <div class="recommend-item">${EVENT_TYPES[r.type].icon} ${r.reason}</div>
+      `).join('')}
+    </div>` : ''}
+
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">备注（可选）</label>
+      <textarea class="form-textarea" id="slot-notes" placeholder="这段时间的特殊说明...">${slot.notes || ''}</textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-danger btn-sm" onclick="deleteSlot('${slot.id}')" style="flex:1;">删除</button>
+      <button class="btn btn-primary" onclick="saveSlot('${slot.id}')" style="flex:2;">保存</button>
+    </div>
+  `);
+}
+
+function selectDim(el) {
+  const selector = el.parentElement;
+  const dim = selector.dataset.dim;
+  const val = el.dataset.val;
+  selector.querySelectorAll('.dim-option').forEach(o => {
+    o.classList.remove('selected','high','mid','low');
+  });
+  el.classList.add('selected', val);
+}
+
+function saveSlot(slotId) {
+  const slot = data.slots.find(s => s.id === slotId);
+  if (!slot) return;
+  slot.name = document.getElementById('slot-name').value;
+  slot.startTime = document.getElementById('slot-start').value;
+  slot.endTime = document.getElementById('slot-end').value;
+  slot.desc = document.getElementById('slot-desc').value;
+  slot.notes = document.getElementById('slot-notes').value;
+
+  document.querySelectorAll('.dim-selector').forEach(sel => {
+    const dim = sel.dataset.dim;
+    const selected = sel.querySelector('.dim-option.selected');
+    slot.dims[dim] = selected ? selected.dataset.val : '';
+  });
+
+  saveData();
+  closeModal();
+  renderSlots();
+}
+
+function deleteSlot(slotId) {
+  if (!confirm('确定删除这个时段吗？')) return;
+  data.slots = data.slots.filter(s => s.id !== slotId);
+  delete data.reminders[slotId];
+  saveData();
+  closeModal();
+  renderSlots();
+}
+
+// ========== 事件管理 ==========
+function renderEvents() {
+  const container = document.getElementById('events-list');
+  if (data.events.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="icon">🎯</div>
+        <div class="text">还没有添加事件<br>点击上方按钮添加你想做的事</div>
+      </div>
+    `;
+    return;
+  }
+
+  const grouped = {};
+  Object.keys(EVENT_TYPES).forEach(t => grouped[t] = []);
+  data.events.forEach(e => grouped[e.type].push(e));
+
+  container.innerHTML = Object.entries(grouped).map(([type, events]) => {
+    if (events.length === 0) return '';
+    return `
+      <div class="section-title">${EVENT_TYPES[type].icon} ${EVENT_TYPES[type].name} <span style="font-size:12px;color:var(--text-muted);font-weight:400;">(${events.length})</span></div>
+      ${events.map(e => `
+        <div class="card" onclick="openEventModal('${e.id}')" style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;">${e.name}</div>
+            ${e.desc ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${e.desc}</div>` : ''}
+          </div>
+          <span style="color:var(--text-dim);font-size:20px;">›</span>
+        </div>
+      `).join('')}
+    `;
+  }).join('');
+}
+
+function openEventModal(eventId) {
+  const event = eventId ? data.events.find(e => e.id === eventId) : null;
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">${event ? '编辑事件' : '添加事件'}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">事件类型</label>
+      <div class="event-types">
+        ${Object.entries(EVENT_TYPES).map(([key, t]) => `
+          <div class="event-type-card ${event && event.type === key ? 'selected' : ''}" data-type="${key}" onclick="selectEventType(this)">
+            <div class="icon">${t.icon}</div>
+            <div class="name">${t.name}</div>
+            <div class="desc">${t.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">事件名称</label>
+      <input type="text" class="form-input" id="event-name" value="${event ? event.name : ''}" placeholder="如：阅读专业书籍">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">描述（可选）</label>
+      <textarea class="form-textarea" id="event-desc" placeholder="详细说明...">${event ? event.desc || '' : ''}</textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      ${event ? `<button class="btn btn-danger btn-sm" onclick="deleteEvent('${event.id}')" style="flex:1;">删除</button>` : ''}
+      <button class="btn btn-primary" onclick="saveEvent('${event ? event.id : ''}')" style="flex:2;">保存</button>
+    </div>
+  `);
+}
+
+function selectEventType(el) {
+  document.querySelectorAll('.event-type-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function saveEvent(eventId) {
+  const typeEl = document.querySelector('.event-type-card.selected');
+  if (!typeEl) { alert('请选择事件类型'); return; }
+  const name = document.getElementById('event-name').value.trim();
+  if (!name) { alert('请输入事件名称'); return; }
+  const desc = document.getElementById('event-desc').value;
+
+  if (eventId) {
+    const event = data.events.find(e => e.id === eventId);
+    event.type = typeEl.dataset.type;
+    event.name = name;
+    event.desc = desc;
+  } else {
+    data.events.push({ id: genId(), type: typeEl.dataset.type, name, desc });
+  }
+  saveData();
+  closeModal();
+  renderEvents();
+}
+
+function deleteEvent(eventId) {
+  if (!confirm('确定删除这个事件吗？')) return;
+  data.events = data.events.filter(e => e.id !== eventId);
+  saveData();
+  closeModal();
+  renderEvents();
+}
+
+// ========== 复盘记录 ==========
+function renderTodayLogs() {
+  const container = document.getElementById('today-logs');
+  const today = new Date().toISOString().split('T')[0];
+  const todayLogs = data.logs.filter(l => l.date === today);
+
+  if (todayLogs.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="icon">📅</div>
+        <div class="text">今天还没有记录<br>点击上方按钮记录时间使用</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = todayLogs.sort((a,b) => b.id.localeCompare(a.id)).map(log => {
+    const slot = data.slots.find(s => s.id === log.slotId);
+    const eventType = EVENT_TYPES[log.eventType];
+    return `
+      <div class="log-item">
+        <div class="log-time">${slot ? slot.startTime : '--:--'}</div>
+        <div class="log-content">
+          <div class="log-slot">${slot ? slot.icon + ' ' + slot.name : '未指定时段'}</div>
+          <div class="log-event">${eventType.icon} ${eventType.name} · ${log.content}</div>
+          ${log.note ? `<div class="log-note">📝 ${log.note}</div>` : ''}
+        </div>
+        <button onclick="deleteLog('${log.id}')" style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;align-self:flex-start;">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function openLogModal() {
+  if (data.slots.length === 0) {
+    alert('请先在「时段盘点」中创建时段');
+    return;
+  }
+  const currentSlot = getCurrentSlot();
+  const today = new Date().toISOString().split('T')[0];
+
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">记录时间使用</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">选择时段</label>
+      <select class="form-select" id="log-slot">
+        ${data.slots.map(s => `
+          <option value="${s.id}" ${currentSlot && currentSlot.id === s.id ? 'selected' : ''}>${s.icon} ${s.name} (${s.startTime}-${s.endTime})</option>
+        `).join('')}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">事件类型</label>
+      <div class="event-types">
+        ${Object.entries(EVENT_TYPES).map(([key, t]) => `
+          <div class="event-type-card" data-type="${key}" onclick="selectEventType(this)">
+            <div class="icon">${t.icon}</div>
+            <div class="name">${t.name}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">做了什么</label>
+      <input type="text" class="form-input" id="log-content" placeholder="如：阅读《深度工作》30分钟">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">复盘备注（可选）</label>
+      <textarea class="form-textarea" id="log-note" placeholder="感受、是否匹配时段质量..."></textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveLog()">保存记录</button>
+  `);
+}
+
+function saveLog() {
+  const slotId = document.getElementById('log-slot').value;
+  const typeEl = document.querySelector('.event-type-card.selected');
+  if (!typeEl) { alert('请选择事件类型'); return; }
+  const content = document.getElementById('log-content').value.trim();
+  if (!content) { alert('请输入做了什么'); return; }
+  const note = document.getElementById('log-note').value;
+
+  const today = new Date().toISOString().split('T')[0];
+  data.logs.push({ id: genId(), date: today, slotId, eventType: typeEl.dataset.type, content, note });
+  saveData();
+  closeModal();
+  renderTodayLogs();
+}
+
+function deleteLog(logId) {
+  data.logs = data.logs.filter(l => l.id !== logId);
+  saveData();
+  renderTodayLogs();
+}
+
+// ========== 统计 ==========
+function renderStats() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayLogs = data.logs.filter(l => l.date === today);
+
+  document.getElementById('stat-slots').textContent = data.slots.length;
+  document.getElementById('stat-events').textContent = data.events.length;
+  document.getElementById('stat-logs').textContent = todayLogs.length;
+
+  // 匹配率：今日记录中，事件类型与时段推荐匹配的比例
+  let matched = 0;
+  todayLogs.forEach(log => {
+    const slot = data.slots.find(s => s.id === log.slotId);
+    if (!slot) return;
+    const { recs } = getRecommendations(slot.dims);
+    if (recs.some(r => r.type === log.eventType)) matched++;
+  });
+  const matchRate = todayLogs.length > 0 ? Math.round(matched/todayLogs.length*100) : 0;
+  document.getElementById('stat-match').textContent = matchRate + '%';
+
+  // 时段质量分布
+  const qualityCount = { high: 0, mid: 0, low: 0, none: 0 };
+  data.slots.forEach(s => qualityCount[calcQuality(s.dims)]++);
+  document.getElementById('quality-chart').innerHTML = `
+    <div class="card">
+      ${Object.entries(qualityCount).map(([q, count]) => {
+        const labels = { high: '高质量', mid: '中质量', low: '低质量', none: '未评估' };
+        const colors = { high: 'var(--success)', mid: 'var(--warning)', low: 'var(--danger)', none: 'var(--text-dim)' };
+        const pct = data.slots.length > 0 ? (count/data.slots.length*100) : 0;
+        return `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+              <span style="color:${colors[q]}">${labels[q]}</span>
+              <span style="color:var(--text-muted)">${count}个 (${pct.toFixed(0)}%)</span>
+            </div>
+            <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${colors[q]};border-radius:4px;transition:width 0.3s;"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  // 事件类型分布
+  const eventCount = {};
+  Object.keys(EVENT_TYPES).forEach(t => eventCount[t] = 0);
+  data.events.forEach(e => eventCount[e.type]++);
+  const totalEvents = data.events.length || 1;
+  document.getElementById('event-chart').innerHTML = `
+    <div class="card">
+      ${Object.entries(eventCount).map(([type, count]) => {
+        const t = EVENT_TYPES[type];
+        const pct = count/totalEvents*100;
+        return `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+              <span>${t.icon} ${t.name}</span>
+              <span style="color:var(--text-muted)">${count}个 (${pct.toFixed(0)}%)</span>
+            </div>
+            <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${t.color};border-radius:4px;transition:width 0.3s;"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ========== 设置：提醒 ==========
+function renderSettings() {
+  const container = document.getElementById('remind-settings');
+  if (data.slots.length === 0) {
+    container.innerHTML = `<div class="card" style="color:var(--text-muted);font-size:13px;">请先在「时段盘点」中创建时段</div>`;
+    return;
+  }
+
+  container.innerHTML = data.slots.map(slot => {
+    const reminder = data.reminders[slot.id] || { enabled: false, advanceMin: 0 };
+    return `
+      <div class="remind-row">
+        <div class="info">
+          <div class="name">${slot.icon} ${slot.name}</div>
+          <div class="time">${slot.startTime} - ${slot.endTime}</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" ${reminder.enabled ? 'checked' : ''} onchange="toggleReminder('${slot.id}', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleReminder(slotId, enabled) {
+  if (!data.reminders[slotId]) data.reminders[slotId] = { enabled: false, advanceMin: 0 };
+  data.reminders[slotId].enabled = enabled;
+  saveData();
+  if (enabled) {
+    requestNotificationPermission();
+    scheduleReminder(slotId);
+  }
+}
+
+// ========== 通知 ==========
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('你的浏览器不支持通知功能');
+    return false;
+  }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+  return false;
+}
+
+async function scheduleReminder(slotId) {
+  const slot = data.slots.find(s => s.id === slotId);
+  if (!slot) return;
+  const reminder = data.reminders[slotId];
+  if (!reminder || !reminder.enabled) return;
+
+  const now = new Date();
+  const [h, m] = slot.startTime.split(':').map(Number);
+  const slotStart = new Date();
+  slotStart.setHours(h, m, 0, 0);
+
+  // 如果今天已过，设为明天
+  if (slotStart <= now) slotStart.setDate(slotStart.getDate() + 1);
+
+  const delay = slotStart - now;
+  setTimeout(() => {
+    sendNotification(slot);
+    // 循环：每天提醒
+    setInterval(() => sendNotification(slot), 24*60*60*1000);
+  }, delay);
+}
+
+async function sendNotification(slot) {
+  // 检查是否是工作日/休息日
+  if (slot.presetId === 'weekend' && !isWeekend()) return;
+  if (slot.presetId !== 'weekend' && isWeekend()) return;
+
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+
+  const q = calcQuality(slot.dims);
+  const { recs } = getRecommendations(slot.dims);
+  const qualityText = qualityLabel(q);
+  const recText = recs.map(r => `${EVENT_TYPES[r.type].icon} ${r.reason}`).join('\n');
+
+  const notif = new Notification(`⏰ ${slot.name} · ${qualityText}`, {
+    body: `当前时段：${slot.startTime}-${slot.endTime}\n${recText}`,
+    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⏳</text></svg>',
+    tag: slot.id,
+  });
+  setTimeout(() => notif.close(), 10000);
+}
+
+function checkNotifyBanner() {
+  const container = document.getElementById('notify-banner-container');
+  if (!container) return;
+  if ('Notification' in window && Notification.permission === 'default') {
+    container.innerHTML = `
+      <div class="notify-banner">
+        <span style="flex:1;">🔔 开启通知权限，在时段开始时获得提醒</span>
+        <button class="btn btn-primary btn-sm" onclick="enableNotifications()">开启</button>
+      </div>
+    `;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+async function enableNotifications() {
+  await requestNotificationPermission();
+  checkNotifyBanner();
+}
+
+// 初始化所有已启用的提醒
+function initReminders() {
+  Object.entries(data.reminders).forEach(([slotId, r]) => {
+    if (r.enabled) scheduleReminder(slotId);
+  });
+}
+
+// ========== 快速添加 ==========
+function quickAdd() {
+  const activePage = document.querySelector('.page.active').id;
+  if (activePage === 'page-slots') {
+    // 添加自定义时段
+    showModal(`
+      <div class="modal-header">
+        <div class="modal-title">添加时段</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">时段名称</label>
+        <input type="text" class="form-input" id="slot-name" placeholder="如：工作日·早起出门">
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">开始时间</label>
+          <input type="time" class="form-input" id="slot-start" value="07:00">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">结束时间</label>
+          <input type="time" class="form-input" id="slot-end" value="08:00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">说明（可选）</label>
+        <input type="text" class="form-input" id="slot-desc" placeholder="如：起床到出门">
+      </div>
+      <div class="form-group">
+        <label class="form-label">类型</label>
+        <select class="form-select" id="slot-preset">
+          ${SLOT_PRESETS.map(p => `<option value="${p.id}">${p.icon} ${p.name}</option>`).join('')}
+          <option value="custom">📋 自定义</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="addCustomSlot()">创建</button>
+    `);
+  } else if (activePage === 'page-events') {
+    openEventModal();
+  } else if (activePage === 'page-today') {
+    openLogModal();
+  }
+}
+
+function addCustomSlot() {
+  const name = document.getElementById('slot-name').value.trim();
+  if (!name) { alert('请输入时段名称'); return; }
+  const presetId = document.getElementById('slot-preset').value;
+  const preset = SLOT_PRESETS.find(p => p.id === presetId);
+  const slot = {
+    id: genId(),
+    presetId: presetId,
+    name: name,
+    icon: preset ? preset.icon : '📋',
+    desc: document.getElementById('slot-desc').value,
+    startTime: document.getElementById('slot-start').value,
+    endTime: document.getElementById('slot-end').value,
+    dims: {},
+    notes: '',
+  };
+  data.slots.push(slot);
+  saveData();
+  closeModal();
+  renderSlots();
+}
+
+// ========== 数据管理 ==========
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `时间管理数据_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        data = { ...data, ...imported };
+        saveData();
+        renderSlots();
+        renderEvents();
+        renderTodayLogs();
+        alert('导入成功');
+      } catch(err) { alert('导入失败：文件格式错误'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAllData() {
+  if (!confirm('确定清空所有数据吗？此操作不可撤销！')) return;
+  if (!confirm('再次确认：所有时段、事件、记录都将被删除')) return;
+  data = { slots: [], events: [], logs: [], reminders: {} };
+  saveData();
+  renderSlots();
+  renderEvents();
+  renderTodayLogs();
+  renderSettings();
+}
+
+// ========== 模态框 ==========
+function showModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-overlay') closeModal();
+});
+
+// ========== Service Worker 注册 ==========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW注册失败:', err));
+  });
+}
+
+// ========== 初始化 ==========
+loadData();
+renderSlots();
+renderEvents();
+renderTodayLogs();
+checkNotifyBanner();
+initReminders();
+
+// 每分钟检查当前时段变化，更新高亮
+setInterval(() => {
+  if (document.querySelector('.page.active').id === 'page-slots') {
+    renderSlots();
+  }
+}, 60000);
+</script>
+
+</body>
+</html>
